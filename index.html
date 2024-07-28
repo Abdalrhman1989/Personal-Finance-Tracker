@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Finance Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, select {
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Finance Tracker</h1>
+    <form id="transaction-form">
+      <input type="text" id="description" placeholder="Description" required>
+      <input type="number" id="amount" placeholder="Amount" required>
+      <select id="type" required>
+        <option value="">Select Type</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <button type="submit">Add Transaction</button>
+    </form>
+    <h2>Transactions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="transactions"></tbody>
+    </table>
+    <h2>Summary</h2>
+    <p id="summary"></p>
+  </div>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const form = document.getElementById('transaction-form');
+    const transactionsTable = document.getElementById('transactions');
+    const summary = document.getElementById('summary');
+
+    let transactions = [];
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const description = document.getElementById('description').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const type = document.getElementById('type').value;
+
+      const transaction = { description, amount, type };
+      transactions.push(transaction);
+
+      updateTransactions();
+      updateSummary();
+    });
+
+    function updateTransactions() {
+      transactionsTable.innerHTML = '';
+      transactions.forEach((transaction, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${transaction.description}</td>
+          <td>${transaction.amount}</td>
+          <td>${transaction.type}</td>
+        `;
+        transactionsTable.appendChild(row);
+      });
+    }
+
+    function updateSummary() {
+      const income = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const expense = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = income - expense;
+
+      summary.innerHTML = `
+        <p>Total Income: $${income.toFixed(2)}</p>
+        <p>Total Expense: $${expense.toFixed(2)}</p>
+        <p>Balance: $${balance.toFixed(2)}</p>
+      `;
+    }
+  </script>
+</body>
+</html>
